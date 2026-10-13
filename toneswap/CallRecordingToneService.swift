@@ -1,0 +1,510 @@
+import Combine
+import Foundation
+import UIKit
+
+enum CallRecordingToneError: LocalizedError {
+    case unsupported
+    case pairingRequired
+    case airliftUnavailable
+    case airliftFailed(String)
+    case toneReadFailed(String, String)
+    case missingTone(String)
+    case missingBackup
+    case invalidToneBundle
+    case verificationFailed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .unsupported:
+            String(localized: "This device or system version is not supported.")
+        case .pairingRequired:
+            String(localized: "Pair this iPhone and connect LocalDevVPN before changing recording tones.")
+        case .airliftUnavailable:
+            String(localized: "This build is missing AirLift file access support.")
+        case .airliftFailed(let reason):
+            String(format: String(localized: "AirLift operation failed: %@"), reason)
+        case .toneReadFailed(let name, let reason):
+            String(format: String(localized: "Could not read %@: %@"), name, reason)
+        case .missingTone(let name):
+            String(format: String(localized: "Missing system tone: %@"), name)
+        case .missingBackup:
+            String(localized: "No original tone backup is available.")
+        case .invalidToneBundle:
+            String(localized: "The bundled silent tones are missing.")
+        case .verificationFailed(let name):
+            String(format: String(localized: "Could not verify %@ after writing."), name)
+        }
+    }
+}
+
+/// Persists the last known tone mode so the UI can restore state without
+/// probing the system files on launch. Verifying the current disclosure tone
+/// requires an airlift read, which is unreliable on some iOS releases, so we
+/// never read at app-open; the stored mode is trusted until the user flips the
+/// switch (a real write) or performs an explicit re-check.
+private enum ToneModeCache {
+    private static let key = "ToneSwapToneMode"
+
+    static func load() -> CallRecordingToneService.ToneMode? {
+        // object(forKey:) returns nil when the key was never set, so a fresh
+        // install (or a now-fixed older build that stored nothing) does not map
+        // onto .checking (raw 0). integer(forKey:) would return 0 here and
+        // wrongly put the UI into the disabled "Checking..." state.
+        guard let raw = UserDefaults.standard.object(forKey: key) as? Int else {
+            return nil
+        }
+        return CallRecordingToneService.ToneMode(rawValue: raw)
+    }
+
+    static func save(_ mode: CallRecordingToneService.ToneMode) {
+        UserDefaults.standard.set(mode.rawValue, forKey: key)
+    }
+}
+
+/// Metadata of a user-supplied replacement tone, persisted so the UI can show
+/// which custom audio is active without probing the device.
+struct CustomToneMeta: Codable {
+    let displayName: String
+    let duration: Double
+}
+
+private enum CustomMetaStore {
+    private static let key = "ToneSwapCustomMetas"
+
+    static func load() -> [ToneKind: CustomToneMeta] {
+        guard let data = UserDefaults.standard.data(forKey: key),
+              let raw = try? JSONDecoder().decode([String: CustomToneMeta].self, from: data)
+        else { return [:] }
+        var out: [ToneKind: CustomToneMeta] = [:]
+        for (key, value) in raw {
+            if let kind = ToneKind(rawValue: key) {
+                out[kind] = value
+            }
+        }
+        return out
+    }
+
+    static func save(_ metas: [ToneKind: CustomToneMeta]) {
+        let raw = Dictionary(uniqueKeysWithValues: metas.map { ($0.key.rawValue, $0.value) })
+        if let data = try? JSONEncoder().encode(raw) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+}
+
+@MainActor
+final class CallRecordingToneService: ObservableObject {
+    enum ToneMode: Int, Equatable {
+        case checking = 0
+        case systemTone = 1
+        case silentTone = 2
+        case unavailable = 3
+        case customTone = 4
+    }
+
+    static let shared = CallRecordingToneService()
+
+    @Published private(set) var mode: ToneMode = .checking
+    @Published private(set) var isBusy = false
+    @Published private(set) var lastError: String?
+    @Published private(set) var statusDetail: String?
+    @Published private(set) var needsAirliftSetup = false
+    @Published private(set) var busyMessage: String?
+    @Published private(set) var customMetas: [ToneKind: CustomToneMeta] = [:]
+
+    private enum AccessBackend {
+        case airlift(pairingPath: String)
+    }
+
+    private struct ToneFile {
+        let name: String
+        let systemPath: String
+        let backupName: String
+        let resourceName: String
+        let resourceExtension: String
+    }
+
+    private let files = [
+        ToneFile(
+            name: "StartDisclosureWithTone.m4a",
+            systemPath: "/var/mobile/Library/CallServices/Greetings/default/StartDisclosureWithTone.m4a",
+            backupName: "StartDisclosureWithTone.m4a",
+            resourceName: "ToneSwapStartSilence",
+            resourceExtension: "m4a"
+        ),
+        ToneFile(
+            name: "StopDisclosure.caf",
+            systemPath: "/var/mobile/Library/CallServices/Greetings/default/StopDisclosure.caf",
+            backupName: "StopDisclosure.caf",
+            resourceName: "ToneSwapStopSilence",
+            resourceExtension: "caf"
+        )
+    ]
+
+    private var backupDirectory: URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appending(path: "ToneSwapBackups", directoryHint: .isDirectory)
+    }
+
+    private init() {}
+
+    func refresh() async {
+        guard !isBusy else { return }
+        isBusy = true
+        defer { isBusy = false }
+
+        // Never probe the system disclosure files at app-open: airlift reads are
+        // unreliable on some iOS releases and would surface a spurious error.
+        // Restore the last known mode from the cache instead.
+        mode = ToneModeCache.load() ?? .systemTone
+        customMetas = CustomMetaStore.load()
+        // Metas are only meaningful while the global mode is custom.
+        if mode != .customTone {
+            customMetas = [:]
+        }
+        statusDetail = nil
+        needsAirliftSetup = false
+        lastError = nil
+        ToneSwapLog.shared.append("refresh: restored cached mode = \(mode)")
+    }
+
+    func clearError() {
+        lastError = nil
+    }
+
+    func applySilentTone() async {
+        guard !isBusy else { return }
+        isBusy = true
+        defer { isBusy = false }
+        ToneSwapLog.shared.append("applySilentTone: start")
+
+        await withBusyScreen(String(localized: "Applying silence to call recording tones")) { [self] in
+            do {
+                let backend = try accessBackend()
+                let current = try await readTones(using: backend)
+                let silent = try silentTones()
+                if current == silent {
+                    self.clearCustomState()
+                    self.mode = .silentTone
+                    self.statusDetail = nil
+                    self.needsAirliftSetup = false
+                    self.lastError = nil
+                    ToneModeCache.save(.silentTone)
+                    ToneSwapLog.shared.append("applySilentTone: already silent")
+                    return
+                }
+
+                try self.ensureBackup(current)
+                ToneSwapLog.shared.append("applySilentTone: backup ensured, writing silence")
+                do {
+                    try await self.writeTones(silent, using: backend)
+                    self.clearCustomState()
+                    self.mode = .silentTone
+                    self.statusDetail = nil
+                    self.needsAirliftSetup = false
+                    self.lastError = nil
+                    ToneModeCache.save(.silentTone)
+                    ToneSwapLog.shared.append("applySilentTone: success")
+                } catch {
+                    try? await self.writeTones(current, using: backend)
+                    throw error
+                }
+            } catch {
+                self.reportOperationError(error)
+            }
+        }
+    }
+
+    func restoreSystemTone() async {
+        guard !isBusy else { return }
+        isBusy = true
+        defer { isBusy = false }
+        ToneSwapLog.shared.append("restoreSystemTone: start")
+
+        await withBusyScreen(String(localized: "Restoring original call recording tones")) { [self] in
+            do {
+                let backend = try accessBackend()
+                let current = try await readTones(using: backend)
+                // No backup yet means the tones have never been changed, so they are
+                // already the original system tones.
+                guard let backup = try? readBackups() else {
+                    clearCustomState()
+                    mode = .systemTone
+                    statusDetail = nil
+                    needsAirliftSetup = false
+                    lastError = nil
+                    ToneModeCache.save(.systemTone)
+                    ToneSwapLog.shared.append("restoreSystemTone: no backup, already original")
+                    return
+                }
+                if current == backup {
+                    clearCustomState()
+                    mode = .systemTone
+                    statusDetail = nil
+                    needsAirliftSetup = false
+                    lastError = nil
+                    ToneModeCache.save(.systemTone)
+                    ToneSwapLog.shared.append("restoreSystemTone: already original")
+                    return
+                }
+
+                do {
+                    ToneSwapLog.shared.append("restoreSystemTone: writing original from backup")
+                    try await writeTones(backup, using: backend)
+                    clearCustomState()
+                    mode = .systemTone
+                    statusDetail = nil
+                    needsAirliftSetup = false
+                    lastError = nil
+                    ToneModeCache.save(.systemTone)
+                    ToneSwapLog.shared.append("restoreSystemTone: success")
+                } catch {
+                    try? await writeTones(current, using: backend)
+                    throw error
+                }
+            } catch {
+                reportOperationError(error)
+            }
+        }
+    }
+
+    /// Applies a user-supplied audio file to a single disclosure tone.
+    /// Backup-first and read-back verified, like the silence path.
+    func applyCustomTone(kind: ToneKind, data: Data, meta: CustomToneMeta) async {
+        guard !isBusy else { return }
+        isBusy = true
+        defer { isBusy = false }
+        let file = files[kind.fileIndex]
+        ToneSwapLog.shared.append("applyCustomTone: start \(file.name) (\(meta.displayName))")
+
+        await withBusyScreen(String(localized: "Applying custom tone")) { [self] in
+            do {
+                let backend = try accessBackend()
+                let current = try await readTones(using: backend)
+                if current[kind.fileIndex] == data {
+                    self.setCustomState(kind: kind, meta: meta)
+                    ToneSwapLog.shared.append("applyCustomTone: already applied")
+                    return
+                }
+
+                try self.ensureBackup(current)
+                ToneSwapLog.shared.append("applyCustomTone: backup ensured, writing custom tone")
+                do {
+                    try await self.writeSingleTone(file, data: data, using: backend)
+                    self.setCustomState(kind: kind, meta: meta)
+                    ToneSwapLog.shared.append("applyCustomTone: success")
+                } catch {
+                    try? await self.writeSingleTone(file, data: current[kind.fileIndex], using: backend)
+                    throw error
+                }
+            } catch {
+                self.reportOperationError(error)
+            }
+        }
+    }
+
+    private func setCustomState(kind: ToneKind, meta: CustomToneMeta) {
+        customMetas[kind] = meta
+        CustomMetaStore.save(customMetas)
+        mode = .customTone
+        statusDetail = nil
+        needsAirliftSetup = false
+        lastError = nil
+        ToneModeCache.save(.customTone)
+    }
+
+    private func clearCustomState() {
+        customMetas = [:]
+        CustomMetaStore.save([:])
+    }
+
+    /// Short per-tone status for the custom tone cards.
+    func stateLabel(for kind: ToneKind) -> String {
+        switch mode {
+        case .silentTone:
+            return String(localized: "Silent")
+        case .customTone:
+            if let meta = customMetas[kind] {
+                return String(format: String(localized: "Custom: %@"), meta.displayName)
+            }
+            return String(localized: "System Original")
+        case .checking:
+            return String(localized: "Checking...")
+        case .unavailable:
+            return String(localized: "Unavailable")
+        case .systemTone:
+            return String(localized: "System Original")
+        }
+    }
+
+    /// Keeps the screen awake and shows a warning banner while an operation
+    /// runs, then restores normal idle behaviour.
+    private func withBusyScreen(_ message: String, operation: @escaping () async -> Void) async {
+        busyMessage = message
+        UIApplication.shared.isIdleTimerDisabled = true
+        defer {
+            busyMessage = nil
+            UIApplication.shared.isIdleTimerDisabled = false
+        }
+        await operation()
+    }
+
+
+    private func reportOperationError(_ error: Error) {
+        mode = .unavailable
+        statusDetail = error.localizedDescription
+        needsAirliftSetup = shouldOfferAirliftSetup(for: error)
+        lastError = error.localizedDescription
+        ToneSwapLog.shared.append("operation error: \(error.localizedDescription)")
+    }
+
+    private func accessBackend() throws -> AccessBackend {
+        guard SystemCompatibility.isSupported else {
+            throw CallRecordingToneError.unsupported
+        }
+
+        let pairingPath = PairingController.pairingFilePath()
+        let attributes = try? FileManager.default.attributesOfItem(atPath: pairingPath)
+        let size = attributes?[.size] as? Int ?? 0
+        guard size > 0 else {
+            throw CallRecordingToneError.pairingRequired
+        }
+        return .airlift(pairingPath: pairingPath)
+    }
+
+    private func shouldOfferAirliftSetup(for error: Error) -> Bool {
+        guard let error = error as? CallRecordingToneError else { return false }
+        switch error {
+        case .pairingRequired, .airliftUnavailable, .airliftFailed:
+            return true
+        case .toneReadFailed:
+            return true
+        case .unsupported, .missingTone, .missingBackup, .invalidToneBundle, .verificationFailed:
+            return false
+        }
+    }
+
+    private func readTones(using backend: AccessBackend) async throws -> [Data] {
+        var tones: [Data] = []
+        tones.reserveCapacity(files.count)
+
+        for file in files {
+            do {
+                switch backend {
+                case .airlift(let pairingPath):
+                    tones.append(
+                        try await AirliftToneTransport.shared.read(
+                            path: file.systemPath,
+                            pairingPath: pairingPath
+                        )
+                    )
+                }
+            } catch {
+                throw mapReadError(error, file: file)
+            }
+        }
+
+        return tones
+    }
+
+    private func mapReadError(_ error: Error, file: ToneFile) -> Error {
+        if let error = error as? CallRecordingToneError {
+            return error
+        }
+
+        let nsError = error as NSError
+        if nsError.domain == NSCocoaErrorDomain, nsError.code == NSFileReadNoSuchFileError {
+            return CallRecordingToneError.missingTone(file.name)
+        }
+        return CallRecordingToneError.toneReadFailed(file.name, error.localizedDescription)
+    }
+
+    private func silentTones() throws -> [Data] {
+        try files.map { file in
+            guard let url = resourceURL(for: file) else {
+                throw CallRecordingToneError.invalidToneBundle
+            }
+            return try Data(contentsOf: url)
+        }
+    }
+
+    private func resourceURL(for file: ToneFile) -> URL? {
+        let bundle = Bundle.main
+        return bundle.url(forResource: file.resourceName, withExtension: file.resourceExtension)
+            ?? bundle.url(
+                forResource: file.resourceName,
+                withExtension: file.resourceExtension,
+                subdirectory: "Resources"
+            )
+            ?? bundle.url(
+                forResource: file.resourceName,
+                withExtension: file.resourceExtension,
+                subdirectory: "SilentTones"
+            )
+    }
+
+    private func ensureBackup(_ current: [Data]) throws {
+        if (try? readBackups()) != nil {
+            return
+        }
+        guard current != (try silentTones()) else {
+            throw CallRecordingToneError.missingBackup
+        }
+
+        try FileManager.default.createDirectory(
+            at: backupDirectory,
+            withIntermediateDirectories: true
+        )
+        for (file, data) in zip(files, current) {
+            try data.write(to: backupURL(for: file), options: .atomic)
+        }
+    }
+
+    private func readBackups() throws -> [Data] {
+        try files.map { file in
+            let url = backupURL(for: file)
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                throw CallRecordingToneError.missingBackup
+            }
+            return try Data(contentsOf: url)
+        }
+    }
+
+    private func backupURL(for file: ToneFile) -> URL {
+        backupDirectory.appending(path: file.backupName)
+    }
+
+    private func writeTones(_ tones: [Data], using backend: AccessBackend) async throws {
+        switch backend {
+        case .airlift(let pairingPath):
+            let payload = zip(files, tones).map {
+                AirliftToneFile(name: $0.name, data: $1)
+            }
+            try await AirliftToneTransport.shared.write(files: payload, pairingPath: pairingPath)
+        }
+
+        let verified = try await readTones(using: backend)
+        for (index, file) in files.enumerated() {
+            guard verified.indices.contains(index), verified[index] == tones[index] else {
+                throw CallRecordingToneError.verificationFailed(file.name)
+            }
+        }
+    }
+
+    private func writeSingleTone(_ file: ToneFile, data: Data, using backend: AccessBackend) async throws {
+        switch backend {
+        case .airlift(let pairingPath):
+            try await AirliftToneTransport.shared.write(
+                files: [AirliftToneFile(name: file.name, data: data)],
+                pairingPath: pairingPath
+            )
+            let verified = try await AirliftToneTransport.shared.read(
+                path: file.systemPath,
+                pairingPath: pairingPath
+            )
+            guard verified == data else {
+                throw CallRecordingToneError.verificationFailed(file.name)
+            }
+        }
+    }
+}
