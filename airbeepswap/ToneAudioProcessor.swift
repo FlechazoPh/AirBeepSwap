@@ -121,7 +121,7 @@ enum ToneAudioProcessor {
 
         // Encode to the container iOS expects.
         let outURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("toneswap-\(kind.rawValue)-\(UUID().uuidString).\(kind.fileExtension)")
+            .appendingPathComponent("airbeepswap-\(kind.rawValue)-\(UUID().uuidString).\(kind.fileExtension)")
         let dstFile: AVAudioFile
         do {
             switch kind {

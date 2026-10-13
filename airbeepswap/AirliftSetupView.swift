@@ -87,7 +87,7 @@ struct AirliftSetupView: View {
             return
         }
         let adopted = PairingController.syncCanonicalPairingFile(from: url.path)
-        ToneSwapLog.shared.append("imported pairing file: \(url.path)")
+        AirBeepSwapLog.shared.append("imported pairing file: \(url.path)")
         if FileManager.default.fileExists(atPath: adopted) {
             paired = true
             pairingError = nil
@@ -104,7 +104,7 @@ struct AirliftSetupView: View {
                 .foregroundStyle(.green)
             Text("Airlift Ready")
                 .font(.largeTitle.bold())
-            Text("Pairing and LocalDevVPN are ready. Return to ToneSwap to read or change the recording tones.")
+            Text("Pairing and LocalDevVPN are ready. Return to AirBeepSwap to read or change the recording tones.")
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Spacer()

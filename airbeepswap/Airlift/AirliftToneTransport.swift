@@ -80,7 +80,7 @@ actor AirliftToneTransport {
                 readFile(
                     pairingCString,
                     pathCString,
-                    ToneSwapLog.ffiCallback,
+                    AirBeepSwapLog.ffiCallback,
                     nil,
                     &output,
                     &outputLength,
@@ -108,7 +108,7 @@ actor AirliftToneTransport {
         configureTargets()
 
         let stagingDirectory = FileManager.default.temporaryDirectory
-            .appending(path: "ToneSwap-Airlift-\(UUID().uuidString)", directoryHint: .isDirectory)
+            .appending(path: "AirBeepSwap-Airlift-\(UUID().uuidString)", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: stagingDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: stagingDirectory) }
 
@@ -127,7 +127,7 @@ actor AirliftToneTransport {
                         pairingCString,
                         sourceCString,
                         targetCString,
-                        ToneSwapLog.ffiCallback,
+                        AirBeepSwapLog.ffiCallback,
                         nil,
                         &outputError
                     )

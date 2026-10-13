@@ -234,7 +234,7 @@ struct CustomToneCard: View {
         }
         let ext = url.pathExtension.isEmpty ? "audio" : url.pathExtension
         let destination = FileManager.default.temporaryDirectory
-            .appendingPathComponent("toneswap-import-\(UUID().uuidString).\(ext)")
+            .appendingPathComponent("airbeepswap-import-\(UUID().uuidString).\(ext)")
         try FileManager.default.copyItem(at: url, to: destination)
         return destination
     }

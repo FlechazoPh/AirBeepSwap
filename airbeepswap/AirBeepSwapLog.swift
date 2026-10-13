@@ -4,8 +4,8 @@ import Foundation
 ///
 /// The Rust/FFI layer calls the C log callback from arbitrary threads, so
 /// writes are guarded by a lock and the UI drains the buffer on demand.
-final class ToneSwapLog {
-    static let shared = ToneSwapLog()
+final class AirBeepSwapLog {
+    static let shared = AirBeepSwapLog()
 
     private let lock = NSLock()
     private var lines: [String] = []
@@ -43,7 +43,7 @@ final class ToneSwapLog {
     func exportText() -> String {
         let stamp = ISO8601DateFormatter().string(from: Date())
         let body = snapshot().joined(separator: "\n")
-        return "ToneSwap log — \(stamp)\n----------------------------\n\(body)"
+        return "AirBeepSwap log — \(stamp)\n----------------------------\n\(body)"
     }
 
     func clear() {
@@ -57,10 +57,10 @@ final class ToneSwapLog {
 /// function pointer. Rust calls it with a NUL-terminated message string.
 private let alLogBridge: @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<CChar>?) -> Void = { _, msg in
     guard let msg = msg else { return }
-    ToneSwapLog.shared.append(String(cString: msg))
+    AirBeepSwapLog.shared.append(String(cString: msg))
 }
 
-extension ToneSwapLog {
+extension AirBeepSwapLog {
     /// The C callback to hand to `al_exploit_read_file` / `al_exploit_write_dir`.
     /// `@convention(c)` function types are Sendable, so it can be nonisolated and
     /// passed from AirliftToneTransport's nonisolated static helpers.

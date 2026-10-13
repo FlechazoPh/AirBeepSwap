@@ -38,7 +38,7 @@ jobs:
 
       - name: Read app version
         run: |
-          VERSION=$(sed -n 's/.*MARKETING_VERSION = \([^;]*\);/\1/p' toneswap.xcodeproj/project.pbxproj | head -n 1)
+          VERSION=$(sed -n 's/.*MARKETING_VERSION = \([^;]*\);/\1/p' airbeepswap.xcodeproj/project.pbxproj | head -n 1)
           test -n "$VERSION"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" != "v$VERSION" ]]; then
@@ -49,40 +49,40 @@ jobs:
       - name: Build unsigned archive
         run: |
           xcodebuild archive \
-            -project toneswap.xcodeproj \
-            -scheme toneswap \
+            -project airbeepswap.xcodeproj \
+            -scheme airbeepswap \
             -configuration Release \
             -destination "generic/platform=iOS" \
-            -archivePath "$RUNNER_TEMP/toneswap.xcarchive" \
+            -archivePath "$RUNNER_TEMP/airbeepswap.xcarchive" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Verify archived Airlift integration
-        run: bash scripts/verify-airlift.sh "$RUNNER_TEMP/toneswap.xcarchive/Products/Applications/toneswap.app" "$VERSION"
+        run: bash scripts/verify-airlift.sh "$RUNNER_TEMP/airbeepswap.xcarchive/Products/Applications/airbeepswap.app" "$VERSION"
 
       - name: Package unsigned IPA
         run: |
           mkdir -p "$RUNNER_TEMP/Payload"
           cp -R \
-            "$RUNNER_TEMP/toneswap.xcarchive/Products/Applications/toneswap.app" \
+            "$RUNNER_TEMP/airbeepswap.xcarchive/Products/Applications/airbeepswap.app" \
             "$RUNNER_TEMP/Payload/"
           cd "$RUNNER_TEMP"
-          zip -qry "toneswap-v${VERSION}-unsigned.ipa" Payload
+          zip -qry "airbeepswap-v${VERSION}-unsigned.ipa" Payload
 
       - name: Upload unsigned IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: toneswap-v${{ env.VERSION }}-unsigned
-          path: ${{ runner.temp }}/toneswap-v${{ env.VERSION }}-unsigned.ipa
+          name: airbeepswap-v${{ env.VERSION }}-unsigned
+          path: ${{ runner.temp }}/airbeepswap-v${{ env.VERSION }}-unsigned.ipa
 
       - name: Publish GitHub release
         if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[release]')
         uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ env.VERSION }}
-          name: ToneSwap v${{ env.VERSION }}
+          name: AirBeepSwap v${{ env.VERSION }}
           target_commitish: ${{ github.sha }}
           generate_release_notes: true
           fail_on_unmatched_files: true
-          files: ${{ runner.temp }}/toneswap-v${{ env.VERSION }}-unsigned.ipa
+          files: ${{ runner.temp }}/airbeepswap-v${{ env.VERSION }}-unsigned.ipa

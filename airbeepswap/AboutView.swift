@@ -14,7 +14,7 @@ struct AboutView: View {
                             .frame(width: 78, height: 78)
                             .background(.orange.opacity(0.12), in: .circle)
 
-                        Text("ToneSwap")
+                        Text("AirBeepSwap")
                             .font(.title2.bold())
                         Text(versionText)
                             .font(.subheadline)
@@ -26,7 +26,7 @@ struct AboutView: View {
 
                 Section(String(localized: "Introduction")) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(String(localized: "ToneSwap silences or replaces the call-recording disclosure tones. Original tones are backed up before the first change and can be restored at any time."))
+                        Text(String(localized: "AirBeepSwap silences or replaces the call-recording disclosure tones. Original tones are backed up before the first change and can be restored at any time."))
                         Text(String(localized: "Supported system:") + " \(SystemCompatibility.supportedRangeDescription)")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
@@ -54,16 +54,16 @@ struct AboutView: View {
                     Label(String(localized: "Logs include pairing, tunnel and AirLift file operations."), systemImage: "list.bullet.rectangle")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
-                    ShareLink(item: ToneSwapLog.shared.exportText()) {
+                    ShareLink(item: AirBeepSwapLog.shared.exportText()) {
                         Label(String(localized: "Export Log"), systemImage: "square.and.arrow.up")
                     }
                     Button(String(localized: "Clear Log"), role: .destructive) {
-                        ToneSwapLog.shared.clear()
+                        AirBeepSwapLog.shared.clear()
                     }
                     .font(.footnote)
                 }
             }
-            .navigationTitle(String(localized: "About ToneSwap"))
+            .navigationTitle(String(localized: "About AirBeepSwap"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -83,7 +83,7 @@ struct AboutView: View {
     }
 
     private var versionText: String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.1"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
         return "Version \(version) (\(build))"
     }

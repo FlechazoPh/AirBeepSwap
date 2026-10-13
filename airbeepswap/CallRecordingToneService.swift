@@ -43,7 +43,7 @@ enum CallRecordingToneError: LocalizedError {
 /// never read at app-open; the stored mode is trusted until the user flips the
 /// switch (a real write) or performs an explicit re-check.
 private enum ToneModeCache {
-    private static let key = "ToneSwapToneMode"
+    private static let key = "AirBeepSwapToneMode"
 
     static func load() -> CallRecordingToneService.ToneMode? {
         // object(forKey:) returns nil when the key was never set, so a fresh
@@ -69,7 +69,7 @@ struct CustomToneMeta: Codable {
 }
 
 private enum CustomMetaStore {
-    private static let key = "ToneSwapCustomMetas"
+    private static let key = "AirBeepSwapCustomMetas"
 
     static func load() -> [ToneKind: CustomToneMeta] {
         guard let data = UserDefaults.standard.data(forKey: key),
@@ -129,21 +129,21 @@ final class CallRecordingToneService: ObservableObject {
             name: "StartDisclosureWithTone.m4a",
             systemPath: "/var/mobile/Library/CallServices/Greetings/default/StartDisclosureWithTone.m4a",
             backupName: "StartDisclosureWithTone.m4a",
-            resourceName: "ToneSwapStartSilence",
+            resourceName: "AirBeepSwapStartSilence",
             resourceExtension: "m4a"
         ),
         ToneFile(
             name: "StopDisclosure.caf",
             systemPath: "/var/mobile/Library/CallServices/Greetings/default/StopDisclosure.caf",
             backupName: "StopDisclosure.caf",
-            resourceName: "ToneSwapStopSilence",
+            resourceName: "AirBeepSwapStopSilence",
             resourceExtension: "caf"
         )
     ]
 
     private var backupDirectory: URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appending(path: "ToneSwapBackups", directoryHint: .isDirectory)
+            .appending(path: "AirBeepSwapBackups", directoryHint: .isDirectory)
     }
 
     private init() {}
@@ -165,7 +165,7 @@ final class CallRecordingToneService: ObservableObject {
         statusDetail = nil
         needsAirliftSetup = false
         lastError = nil
-        ToneSwapLog.shared.append("refresh: restored cached mode = \(mode)")
+        AirBeepSwapLog.shared.append("refresh: restored cached mode = \(mode)")
     }
 
     func clearError() {
@@ -176,7 +176,7 @@ final class CallRecordingToneService: ObservableObject {
         guard !isBusy else { return }
         isBusy = true
         defer { isBusy = false }
-        ToneSwapLog.shared.append("applySilentTone: start")
+        AirBeepSwapLog.shared.append("applySilentTone: start")
 
         await withBusyScreen(String(localized: "Applying silence to call recording tones")) { [self] in
             do {
@@ -190,12 +190,12 @@ final class CallRecordingToneService: ObservableObject {
                     self.needsAirliftSetup = false
                     self.lastError = nil
                     ToneModeCache.save(.silentTone)
-                    ToneSwapLog.shared.append("applySilentTone: already silent")
+                    AirBeepSwapLog.shared.append("applySilentTone: already silent")
                     return
                 }
 
                 try self.ensureBackup(current)
-                ToneSwapLog.shared.append("applySilentTone: backup ensured, writing silence")
+                AirBeepSwapLog.shared.append("applySilentTone: backup ensured, writing silence")
                 do {
                     try await self.writeTones(silent, using: backend)
                     self.clearCustomState()
@@ -204,7 +204,7 @@ final class CallRecordingToneService: ObservableObject {
                     self.needsAirliftSetup = false
                     self.lastError = nil
                     ToneModeCache.save(.silentTone)
-                    ToneSwapLog.shared.append("applySilentTone: success")
+                    AirBeepSwapLog.shared.append("applySilentTone: success")
                 } catch {
                     try? await self.writeTones(current, using: backend)
                     throw error
@@ -219,7 +219,7 @@ final class CallRecordingToneService: ObservableObject {
         guard !isBusy else { return }
         isBusy = true
         defer { isBusy = false }
-        ToneSwapLog.shared.append("restoreSystemTone: start")
+        AirBeepSwapLog.shared.append("restoreSystemTone: start")
 
         await withBusyScreen(String(localized: "Restoring original call recording tones")) { [self] in
             do {
@@ -234,7 +234,7 @@ final class CallRecordingToneService: ObservableObject {
                     needsAirliftSetup = false
                     lastError = nil
                     ToneModeCache.save(.systemTone)
-                    ToneSwapLog.shared.append("restoreSystemTone: no backup, already original")
+                    AirBeepSwapLog.shared.append("restoreSystemTone: no backup, already original")
                     return
                 }
                 if current == backup {
@@ -244,12 +244,12 @@ final class CallRecordingToneService: ObservableObject {
                     needsAirliftSetup = false
                     lastError = nil
                     ToneModeCache.save(.systemTone)
-                    ToneSwapLog.shared.append("restoreSystemTone: already original")
+                    AirBeepSwapLog.shared.append("restoreSystemTone: already original")
                     return
                 }
 
                 do {
-                    ToneSwapLog.shared.append("restoreSystemTone: writing original from backup")
+                    AirBeepSwapLog.shared.append("restoreSystemTone: writing original from backup")
                     try await writeTones(backup, using: backend)
                     clearCustomState()
                     mode = .systemTone
@@ -257,7 +257,7 @@ final class CallRecordingToneService: ObservableObject {
                     needsAirliftSetup = false
                     lastError = nil
                     ToneModeCache.save(.systemTone)
-                    ToneSwapLog.shared.append("restoreSystemTone: success")
+                    AirBeepSwapLog.shared.append("restoreSystemTone: success")
                 } catch {
                     try? await writeTones(current, using: backend)
                     throw error
@@ -275,7 +275,7 @@ final class CallRecordingToneService: ObservableObject {
         isBusy = true
         defer { isBusy = false }
         let file = files[kind.fileIndex]
-        ToneSwapLog.shared.append("applyCustomTone: start \(file.name) (\(meta.displayName))")
+        AirBeepSwapLog.shared.append("applyCustomTone: start \(file.name) (\(meta.displayName))")
 
         await withBusyScreen(String(localized: "Applying custom tone")) { [self] in
             do {
@@ -283,16 +283,16 @@ final class CallRecordingToneService: ObservableObject {
                 let current = try await readTones(using: backend)
                 if current[kind.fileIndex] == data {
                     self.setCustomState(kind: kind, meta: meta)
-                    ToneSwapLog.shared.append("applyCustomTone: already applied")
+                    AirBeepSwapLog.shared.append("applyCustomTone: already applied")
                     return
                 }
 
                 try self.ensureBackup(current)
-                ToneSwapLog.shared.append("applyCustomTone: backup ensured, writing custom tone")
+                AirBeepSwapLog.shared.append("applyCustomTone: backup ensured, writing custom tone")
                 do {
                     try await self.writeSingleTone(file, data: data, using: backend)
                     self.setCustomState(kind: kind, meta: meta)
-                    ToneSwapLog.shared.append("applyCustomTone: success")
+                    AirBeepSwapLog.shared.append("applyCustomTone: success")
                 } catch {
                     try? await self.writeSingleTone(file, data: current[kind.fileIndex], using: backend)
                     throw error
@@ -355,7 +355,7 @@ final class CallRecordingToneService: ObservableObject {
         statusDetail = error.localizedDescription
         needsAirliftSetup = shouldOfferAirliftSetup(for: error)
         lastError = error.localizedDescription
-        ToneSwapLog.shared.append("operation error: \(error.localizedDescription)")
+        AirBeepSwapLog.shared.append("operation error: \(error.localizedDescription)")
     }
 
     private func accessBackend() throws -> AccessBackend {

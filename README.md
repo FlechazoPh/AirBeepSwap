@@ -1,8 +1,8 @@
-# ToneSwap
+# AirBeepSwap
 
 > 🌍 **Languages:** [English](./README.md) | [简体中文](./README_zh-CN.md)
 
-ToneSwap is an iOS tool for customizing the call-recording disclosure tones — the sounds iOS plays when call recording starts and stops. Silence them with one switch, or replace each tone with your own audio file: pick a file, see its waveform and duration, preview it, and apply it. Original tones are backed up before the first change and can be restored with one tap.
+AirBeepSwap is an iOS tool for customizing the call-recording disclosure tones — the sounds iOS plays when call recording starts and stops. Silence them with one switch, or replace each tone with your own audio file: pick a file, see its waveform and duration, preview it, and apply it. Original tones are backed up before the first change and can be restored with one tap.
 
 ## Features
 
@@ -17,12 +17,12 @@ ToneSwap is an iOS tool for customizing the call-recording disclosure tones — 
 
 ## How it works
 
-ToneSwap accesses the system tone files through the same AirTraffic sandbox escape as [AirBeep](https://github.com/LinkPass888/AirBeep):
+AirBeepSwap accesses the system tone files through the same AirTraffic sandbox escape as [AirBeep](https://github.com/LinkPass888/AirBeep):
 
 - `/var/mobile/Library/CallServices/Greetings/default/StartDisclosureWithTone.m4a`
 - `/var/mobile/Library/CallServices/Greetings/default/StopDisclosure.caf`
 
-The app pairs with the iPhone itself (posing as a Mac pairing host over Bonjour/RPPairing), opens a tunnel to the device's lockdown services, and performs the file operations through the Airlift core. Backups live in the app's Documents directory under `ToneSwapBackups`.
+The app pairs with the iPhone itself (posing as a Mac pairing host over Bonjour/RPPairing), opens a tunnel to the device's lockdown services, and performs the file operations through the Airlift core. Backups live in the app's Documents directory under `AirBeepSwapBackups`.
 
 ## Requirements
 
@@ -31,7 +31,7 @@ The app pairs with the iPhone itself (posing as a Mac pairing host over Bonjour/
 - Local builds need Xcode 27 or newer.
 - The provided GitHub Actions workflow builds an unsigned IPA in the cloud.
 
-> ToneSwap relies on non-public system behavior; compatibility may change between iOS versions.
+> AirBeepSwap relies on non-public system behavior; compatibility may change between iOS versions.
 
 ## Setup
 
@@ -41,9 +41,9 @@ The app pairs with the iPhone itself (posing as a Mac pairing host over Bonjour/
 
 ## Build
 
-Open `toneswap.xcodeproj`, select the `toneswap` target, set your signing team, and build to a physical device.
+Open `airbeepswap.xcodeproj`, select the `airbeepswap` target, set your signing team, and build to a physical device.
 
-For an unsigned IPA, run the `Release unsigned IPA` workflow in GitHub Actions. The artifact is named `toneswap-v<version>-unsigned.ipa`.
+For an unsigned IPA, run the `Release unsigned IPA` workflow in GitHub Actions. The artifact is named `airbeepswap-v<version>-unsigned.ipa`.
 
 ## Legal notice
 
@@ -59,4 +59,4 @@ Removing or replacing the disclosure tone means the other party is no longer tol
 
 ## License
 
-ToneSwap is released under the [GNU General Public License v3.0](LICENSE), following the license of the AirBeep codebase it derives from.
+AirBeepSwap is released under the [GNU General Public License v3.0](LICENSE), following the license of the AirBeep codebase it derives from.

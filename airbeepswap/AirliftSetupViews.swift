@@ -58,7 +58,7 @@ struct AirliftWiFiRequiredView: View {
                 .font(.largeTitle.bold())
             Text("Airlift requires an active Wi-Fi connection. LocalDevVPN does not work over cellular.")
                 .foregroundStyle(.secondary)
-            Text("Connect this iPhone to a Wi-Fi network to continue. ToneSwap will continue automatically once Wi-Fi is available.")
+            Text("Connect this iPhone to a Wi-Fi network to continue. AirBeepSwap will continue automatically once Wi-Fi is available.")
                 .foregroundStyle(.secondary)
             Spacer()
         }
@@ -81,7 +81,7 @@ struct AirliftPairingView: View {
                 .foregroundStyle(.tint)
             Text("Pair this iPhone")
                 .font(.largeTitle.bold())
-            Text("Start pairing, then open Settings › Privacy & Security › Developer Mode › Pair with ToneSwap.")
+            Text("Start pairing, then open Settings › Privacy & Security › Developer Mode › Pair with AirBeepSwap.")
                 .foregroundStyle(.secondary)
             if let pin {
                 Text(pin).font(.largeTitle.monospacedDigit())
@@ -129,7 +129,7 @@ struct AirliftVPNView: View {
                 .foregroundStyle(.tint)
             Text("Connect LocalDevVPN")
                 .font(.largeTitle.bold())
-            Text("Open LocalDevVPN, tap Connect, then return to ToneSwap.")
+            Text("Open LocalDevVPN, tap Connect, then return to AirBeepSwap.")
                 .foregroundStyle(.secondary)
             Button("Open LocalDevVPN", action: openLocalDevVPN)
                 .buttonStyle(.bordered)

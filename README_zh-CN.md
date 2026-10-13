@@ -1,8 +1,8 @@
-# ToneSwap
+# AirBeepSwap
 
 > 🌍 **Languages:** [English](./README.md) | 简体中文
 
-ToneSwap 是一款 iOS 工具，用于自定义通话录音提示音 —— 即 iOS 在通话录音开始和结束时播放的提示音。一键静音，或为每段提示音替换成你自己的音频：选择文件、查看波形与时长、试听后应用。首次修改前自动备份原始提示音，一键即可恢复。
+AirBeepSwap 是一款 iOS 工具，用于自定义通话录音提示音 —— 即 iOS 在通话录音开始和结束时播放的提示音。一键静音，或为每段提示音替换成你自己的音频：选择文件、查看波形与时长、试听后应用。首次修改前自动备份原始提示音，一键即可恢复。
 
 ## 功能特性
 
@@ -17,12 +17,12 @@ ToneSwap 是一款 iOS 工具，用于自定义通话录音提示音 —— 即 
 
 ## 工作原理
 
-ToneSwap 通过与 [AirBeep](https://github.com/LinkPass888/AirBeep) 相同的 AirTraffic 沙盒逃逸访问系统提示音文件：
+AirBeepSwap 通过与 [AirBeep](https://github.com/LinkPass888/AirBeep) 相同的 AirTraffic 沙盒逃逸访问系统提示音文件：
 
 - `/var/mobile/Library/CallServices/Greetings/default/StartDisclosureWithTone.m4a`
 - `/var/mobile/Library/CallServices/Greetings/default/StopDisclosure.caf`
 
-App 将自己伪装成一台 Mac 配对主机（Bonjour/RPPairing）与本机配对，通过隧道访问设备的 lockdown 服务，再经 Airlift 核心执行文件操作。备份保存在应用 Documents 目录下的 `ToneSwapBackups` 中。
+App 将自己伪装成一台 Mac 配对主机（Bonjour/RPPairing）与本机配对，通过隧道访问设备的 lockdown 服务，再经 Airlift 核心执行文件操作。备份保存在应用 Documents 目录下的 `AirBeepSwapBackups` 中。
 
 ## 系统要求
 
@@ -31,7 +31,7 @@ App 将自己伪装成一台 Mac 配对主机（Bonjour/RPPairing）与本机配
 - 本地构建需 Xcode 27 或更高版本。
 - 仓库提供的 GitHub Actions 工作流可在云端构建 unsigned IPA。
 
-> ToneSwap 依赖非公开的系统行为，不同 iOS 版本之间兼容性可能发生变化。
+> AirBeepSwap 依赖非公开的系统行为，不同 iOS 版本之间兼容性可能发生变化。
 
 ## 使用
 
@@ -41,9 +41,9 @@ App 将自己伪装成一台 Mac 配对主机（Bonjour/RPPairing）与本机配
 
 ## 构建
 
-打开 `toneswap.xcodeproj`，选择 `toneswap` target，设置你的签名团队，然后构建到实体设备。
+打开 `airbeepswap.xcodeproj`，选择 `airbeepswap` target，设置你的签名团队，然后构建到实体设备。
 
-如需构建 unsigned IPA，请在 GitHub Actions 中运行 `Release unsigned IPA` 工作流。成品文件名为 `toneswap-v<version>-unsigned.ipa`。
+如需构建 unsigned IPA，请在 GitHub Actions 中运行 `Release unsigned IPA` 工作流。成品文件名为 `airbeepswap-v<version>-unsigned.ipa`。
 
 ## 法律声明
 
@@ -59,4 +59,4 @@ App 将自己伪装成一台 Mac 配对主机（Bonjour/RPPairing）与本机配
 
 ## 许可证
 
-ToneSwap 以 [GNU 通用公共许可证 v3.0](LICENSE) 发布（沿用所基于的 AirBeep 代码的许可证）。
+AirBeepSwap 以 [GNU 通用公共许可证 v3.0](LICENSE) 发布（沿用所基于的 AirBeep 代码的许可证）。

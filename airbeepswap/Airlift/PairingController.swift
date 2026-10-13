@@ -10,7 +10,7 @@ final class PairingController: ObservableObject {
 
     static let shared = PairingController()
 
-    private let hostName = "ToneSwap"
+    private let hostName = "AirBeepSwap"
     private let hostModel = "Mac17,7"   // device sees a Mac-like pairing host
     private let bindAddress = "0.0.0.0"
 
@@ -46,7 +46,7 @@ final class PairingController: ObservableObject {
         var errorDescription: String? {
             switch self {
             case .busy: return "Pairing is already in progress."
-            case .localNetworkDenied: return "Local Network permission is off. Enable it in Settings › ToneSwap › Local Network."
+            case .localNetworkDenied: return "Local Network permission is off. Enable it in Settings › AirBeepSwap › Local Network."
             case .zeroBytes: return "Pairing produced an empty file. Approve the pairing request, then try again."
             case let .failed(msg): return msg
             }
@@ -265,7 +265,7 @@ final class PairingController: ObservableObject {
 
     fileprivate func presentPin(_ pin: String) {
         pairingPIN = pin
-        pairingStatus = "Enter PIN \(pin) in Settings › Privacy & Security › Developer Mode › Pair with ToneSwap"
+        pairingStatus = "Enter PIN \(pin) in Settings › Privacy & Security › Developer Mode › Pair with AirBeepSwap"
     }
 
     private func stopAdvertising() {

@@ -1,7 +1,7 @@
 import Combine
 import SwiftUI
 
-struct ToneSwapRootView: View {
+struct AirBeepSwapRootView: View {
     @StateObject private var service = CallRecordingToneService.shared
     @State private var showingAbout = false
     @State private var showingAirliftSetup = false
@@ -26,7 +26,7 @@ struct ToneSwapRootView: View {
                 .padding(20)
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("ToneSwap")
+            .navigationTitle("AirBeepSwap")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -186,7 +186,7 @@ struct ToneSwapRootView: View {
             Label(String(localized: "Airlift Setup Required"), systemImage: "link.badge.plus")
                 .font(.headline)
 
-            Text(String(localized: "Pair this iPhone and connect LocalDevVPN to allow ToneSwap to access the recording tone files."))
+            Text(String(localized: "Pair this iPhone and connect LocalDevVPN to allow AirBeepSwap to access the recording tone files."))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
@@ -289,5 +289,5 @@ struct ToneSwapRootView: View {
 }
 
 #Preview {
-    ToneSwapRootView()
+    AirBeepSwapRootView()
 }

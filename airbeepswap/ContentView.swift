@@ -1,10 +1,10 @@
 import SwiftUI
 
 @main
-struct ToneSwapApp: App {
+struct AirBeepSwapApp: App {
     var body: some Scene {
         WindowGroup {
-            ToneSwapRootView()
+            AirBeepSwapRootView()
         }
     }
 }
