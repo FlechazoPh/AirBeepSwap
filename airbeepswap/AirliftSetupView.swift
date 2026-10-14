@@ -1,3 +1,6 @@
+// AirBeepSwap — maintained by Poner7.
+// https://github.com/poner7/AirBeepSwap
+
 import Combine
 import Network
 import SwiftUI
@@ -5,10 +8,12 @@ import UniformTypeIdentifiers
 import UIKit
 
 /// Completes the two prerequisites used by the AirLift backend:
-/// an on-device pairing record and the LocalDevVPN loopback connection.
+/// an on-device pairing record and the embedded local tunnel.
 struct AirliftSetupView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     @ObservedObject private var pairing = PairingController.shared
+    @ObservedObject private var tunnel = LocalTunnelController.shared
     @StateObject private var wifiMonitor = AirliftWiFiMonitor()
 
     @State private var paired = FileManager.default.fileExists(
@@ -32,9 +37,14 @@ struct AirliftSetupView: View {
                     if connected {
                         readyView
                     } else if paired {
-                        AirliftVPNView(
-                            connectionError: connectionError,
+                        AirliftTunnelView(
+                            connectionError: connectionError ?? tunnel.lastError,
                             checking: checking,
+                            connecting: tunnel.isBusy,
+                            isConnected: tunnel.isConnected,
+                            statusText: tunnel.statusText,
+                            onConnect: connectTunnel,
+                            onDisconnect: { tunnel.disconnect() },
                             onCheck: checkConnection,
                             onPairAgain: {
                                 paired = false
@@ -72,6 +82,13 @@ struct AirliftSetupView: View {
                     }
                 }
             }
+            .task { await tunnel.refreshStatus() }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { Task { await tunnel.refreshStatus() } }
+            }
+            .onChange(of: tunnel.isConnected) { _, isConnected in
+                if !isConnected { connected = false }
+            }
         }
     }
 
@@ -104,7 +121,7 @@ struct AirliftSetupView: View {
                 .foregroundStyle(.green)
             Text("Airlift Ready")
                 .font(.largeTitle.bold())
-            Text("Pairing and LocalDevVPN are ready. Return to AirBeepSwap to read or change the recording tones.")
+            Text("Pairing and the built-in tunnel are ready. Return to AirBeepSwap to read or change the recording tones.")
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Spacer()
@@ -131,6 +148,15 @@ struct AirliftSetupView: View {
         }
     }
 
+    private func connectTunnel() {
+        guard !tunnel.isBusy else { return }
+        connectionError = nil
+        Task {
+            do { try await tunnel.connect() }
+            catch { connectionError = error.localizedDescription }
+        }
+    }
+
     private func checkConnection() {
         guard !checking else { return }
         checking = true
@@ -138,6 +164,7 @@ struct AirliftSetupView: View {
         Task {
             defer { checking = false }
             do {
+                try await tunnel.ensureConnected()
                 _ = try await TendiesEngine.shared.detectPosterBoardContainer(
                     pairingPath: PairingController.pairingFilePath()
                 )

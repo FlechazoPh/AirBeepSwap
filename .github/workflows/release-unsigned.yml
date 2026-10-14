@@ -36,6 +36,12 @@ jobs:
       - name: Verify vendored Airlift
         run: bash scripts/verify-airlift.sh
 
+      - name: Check system compatibility
+        run: bash scripts/test-system-compatibility.sh
+
+      - name: Check local tunnel packets
+        run: bash scripts/test-local-tunnel.sh
+
       - name: Read app version
         run: |
           VERSION=$(sed -n 's/.*MARKETING_VERSION = \([^;]*\);/\1/p' airbeepswap.xcodeproj/project.pbxproj | head -n 1)
@@ -60,6 +66,9 @@ jobs:
 
       - name: Verify archived Airlift integration
         run: bash scripts/verify-airlift.sh "$RUNNER_TEMP/airbeepswap.xcarchive/Products/Applications/airbeepswap.app" "$VERSION"
+
+      - name: Verify embedded local tunnel
+        run: python3 scripts/verify-local-tunnel.py "$RUNNER_TEMP/airbeepswap.xcarchive/Products/Applications/airbeepswap.app"
 
       - name: Package unsigned IPA
         run: |

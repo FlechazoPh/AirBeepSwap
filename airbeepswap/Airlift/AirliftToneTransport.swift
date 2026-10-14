@@ -1,3 +1,6 @@
+// AirBeepSwap — maintained by Poner7.
+// https://github.com/poner7/AirBeepSwap
+
 import AirliftFFI
 import Darwin
 import Foundation
@@ -7,7 +10,7 @@ import Foundation
 /// platform-stable and well documented, so produce the Swift equivalent on
 /// demand. A plain global constant would be flagged as non-Sendable by strict
 /// concurrency, so this is a small factory function instead.
-private func rtlDefaultHandle() -> UnsafeMutableRawPointer? {
+nonisolated private func rtlDefaultHandle() -> UnsafeMutableRawPointer? {
     UnsafeMutableRawPointer(bitPattern: -2)
 }
 

@@ -1,8 +1,11 @@
+// AirBeepSwap — maintained by Poner7.
+// https://github.com/poner7/AirBeepSwap
+
 import AVFoundation
 import Foundation
 
 /// Which disclosure tone a custom audio file targets.
-enum ToneKind: String, CaseIterable, Sendable {
+nonisolated enum ToneKind: String, CaseIterable, Sendable {
     case start
     case stop
 
@@ -67,7 +70,7 @@ struct PreparedTone: Sendable {
     let peaks: [Float]
 }
 
-enum ToneAudioProcessor {
+nonisolated enum ToneAudioProcessor {
     /// Hard cap so a pathological input cannot exhaust memory during conversion.
     private static let maxDuration: TimeInterval = 120
 

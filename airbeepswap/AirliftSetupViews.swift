@@ -1,3 +1,6 @@
+// AirBeepSwap — maintained by Poner7.
+// https://github.com/poner7/AirBeepSwap
+
 import SwiftUI
 import UIKit
 import Network
@@ -56,7 +59,7 @@ struct AirliftWiFiRequiredView: View {
                 .foregroundStyle(.tint)
             Text("Wi-Fi Required")
                 .font(.largeTitle.bold())
-            Text("Airlift requires an active Wi-Fi connection. LocalDevVPN does not work over cellular.")
+            Text("Connect to Wi-Fi to use pairing and the built-in local tunnel.")
                 .foregroundStyle(.secondary)
             Text("Connect this iPhone to a Wi-Fi network to continue. AirBeepSwap will continue automatically once Wi-Fi is available.")
                 .foregroundStyle(.secondary)
@@ -115,9 +118,14 @@ struct AirliftPairingView: View {
     }
 }
 
-struct AirliftVPNView: View {
+struct AirliftTunnelView: View {
     let connectionError: String?
     let checking: Bool
+    let connecting: Bool
+    let isConnected: Bool
+    let statusText: String
+    let onConnect: () -> Void
+    let onDisconnect: () -> Void
     let onCheck: () -> Void
     let onPairAgain: () -> Void
 
@@ -127,13 +135,25 @@ struct AirliftVPNView: View {
             Image(systemName: "network")
                 .font(.system(size: 44))
                 .foregroundStyle(.tint)
-            Text("Connect LocalDevVPN")
+            Text("Connect built-in tunnel")
                 .font(.largeTitle.bold())
-            Text("Open LocalDevVPN, tap Connect, then return to AirBeepSwap.")
+            Text("AirBeepSwap includes the local tunnel. Tap Connect and allow iOS to add the VPN configuration.")
                 .foregroundStyle(.secondary)
-            Button("Open LocalDevVPN", action: openLocalDevVPN)
-                .buttonStyle(.bordered)
+            Label(statusText, systemImage: isConnected ? "checkmark.circle.fill" : "network")
+                .foregroundStyle(isConnected ? .green : .secondary)
+            if isConnected {
+                Button("Disconnect tunnel", action: onDisconnect)
+                    .buttonStyle(.bordered)
+                    .disabled(checking || connecting)
+            } else {
+                Button(action: onConnect) {
+                    if connecting { ProgressView("Connecting local tunnel…") }
+                    else { Text("Connect tunnel") }
+                }
+                .buttonStyle(.borderedProminent)
                 .controlSize(.large)
+                .disabled(connecting || checking)
+            }
             if let connectionError {
                 Text(connectionError).foregroundStyle(.red)
                 Button("Pair again", action: onPairAgain)
@@ -151,21 +171,11 @@ struct AirliftVPNView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .disabled(checking)
+            .disabled(checking || connecting || !isConnected)
         }
         .padding(24)
     }
 
-    private func openLocalDevVPN() {
-        let appURL = URL(string: "localdevvpn://")!
-        let storeURL = URL(string: "https://apps.apple.com/app/id6755608044")!
-        UIApplication.shared.open(appURL) { opened in
-            guard !opened else { return }
-            DispatchQueue.main.async {
-                UIApplication.shared.open(storeURL)
-            }
-        }
-    }
 }
 
 #Preview("Wi-Fi Required") {
@@ -176,6 +186,7 @@ struct AirliftVPNView: View {
     AirliftPairingView(running: false, pin: nil, error: nil, onStart: {}, onImportPairingFile: {})
 }
 
-#Preview("LocalDevVPN") {
-    AirliftVPNView(connectionError: nil, checking: false, onCheck: {}, onPairAgain: {})
+#Preview("Built-in tunnel") {
+    AirliftTunnelView(connectionError: nil, checking: false, connecting: false, isConnected: false,
+                      statusText: "Local tunnel disconnected", onConnect: {}, onDisconnect: {}, onCheck: {}, onPairAgain: {})
 }

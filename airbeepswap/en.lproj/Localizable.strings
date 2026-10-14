@@ -5,9 +5,6 @@
 "Start pairing, then open Settings › Privacy & Security › Developer Mode › Pair with AirBeepSwap." = "Start pairing, then open Settings › Privacy & Security › Developer Mode › Pair with AirBeepSwap.";
 "Waiting for pairing…" = "Waiting for pairing…";
 "Start pairing" = "Start pairing";
-"Connect LocalDevVPN" = "Connect LocalDevVPN";
-"Open LocalDevVPN, tap Connect, then return to AirBeepSwap." = "Open LocalDevVPN, tap Connect, then return to AirBeepSwap.";
-"Open LocalDevVPN" = "Open LocalDevVPN";
 "Pair again" = "Pair again";
 "Checking connection…" = "Checking connection…";
 "Check and enter" = "Check and enter";
@@ -29,7 +26,6 @@
 "Operation Failed" = "Operation Failed";
 "This device or system version is not supported." = "This device or system version is not supported.";
 "Missing system tone: %@" = "Missing system tone: %@";
-"Pair this iPhone and connect LocalDevVPN before changing recording tones." = "Pair this iPhone and connect LocalDevVPN before changing recording tones.";
 "This build is missing AirLift file access support." = "This build is missing AirLift file access support.";
 "AirLift operation failed: %@" = "AirLift operation failed: %@";
 "Could not read %@: %@" = "Could not read %@: %@";
@@ -38,10 +34,8 @@
 "Could not verify %@ after writing." = "Could not verify %@ after writing.";
 "Airlift Setup" = "Airlift Setup";
 "Airlift Setup Required" = "Airlift Setup Required";
-"Pair this iPhone and connect LocalDevVPN to allow AirBeepSwap to access the recording tone files." = "Pair this iPhone and connect LocalDevVPN to allow AirBeepSwap to access the recording tone files.";
 "Open Airlift Setup" = "Open Airlift Setup";
 "Airlift Ready" = "Airlift Ready";
-"Pairing and LocalDevVPN are ready. Return to AirBeepSwap to read or change the recording tones." = "Pairing and LocalDevVPN are ready. Return to AirBeepSwap to read or change the recording tones.";
 "About" = "About";
 "About AirBeepSwap" = "About AirBeepSwap";
 "Introduction" = "Introduction";
@@ -95,3 +89,22 @@
 "Removing or replacing the disclosure tone means the other party is no longer told the call is being recorded. Many jurisdictions require informing all parties before recording. Use this app only on your own device and only where the law allows. You are solely responsible for complying with applicable laws." = "Removing or replacing the disclosure tone means the other party is no longer told the call is being recorded. Many jurisdictions require informing all parties before recording. Use this app only on your own device and only where the law allows. You are solely responsible for complying with applicable laws.";
 "Removing or replacing the disclosure tone means the other party is no longer told the call is being recorded. Use only where the law allows." = "Removing or replacing the disclosure tone means the other party is no longer told the call is being recorded. Use only where the law allows.";
 "Logs include pairing, tunnel and AirLift file operations." = "Logs include pairing, tunnel and AirLift file operations.";
+"Pair this iPhone and connect the built-in tunnel before changing recording tones." = "Pair this iPhone and connect the built-in tunnel before changing recording tones.";
+"Pair this iPhone and connect the built-in tunnel to allow AirBeepSwap to access the recording tone files." = "Pair this iPhone and connect the built-in tunnel to allow AirBeepSwap to access the recording tone files.";
+"Pairing and the built-in tunnel are ready. Return to AirBeepSwap to read or change the recording tones." = "Pairing and the built-in tunnel are ready. Return to AirBeepSwap to read or change the recording tones.";
+"Connect to Wi-Fi to use pairing and the built-in local tunnel." = "Connect to Wi-Fi to use pairing and the built-in local tunnel.";
+"Connect built-in tunnel" = "Connect built-in tunnel";
+"AirBeepSwap includes the local tunnel. Tap Connect and allow iOS to add the VPN configuration." = "AirBeepSwap includes the local tunnel. Tap Connect and allow iOS to add the VPN configuration.";
+"Connect tunnel" = "Connect tunnel";
+"Disconnect tunnel" = "Disconnect tunnel";
+"Local tunnel connected" = "Local tunnel connected";
+"Local tunnel disconnected" = "Local tunnel disconnected";
+"Connecting local tunnel…" = "Connecting local tunnel…";
+"Disconnecting local tunnel…" = "Disconnecting local tunnel…";
+"A local tunnel operation is already in progress." = "A local tunnel operation is already in progress.";
+"The built-in tunnel requires a physical iPhone and Network Extension signing permissions." = "The built-in tunnel requires a physical iPhone and Network Extension signing permissions.";
+"The built-in tunnel did not connect. Check that both the app and its extension are signed with Network Extension permissions." = "The built-in tunnel did not connect. Check that both the app and its extension are signed with Network Extension permissions.";
+"Could not configure the built-in tunnel: %@. Both the app and its extension need Network Extension signing permissions." = "Could not configure the built-in tunnel: %@. Both the app and its extension need Network Extension signing permissions.";
+
+"Maintained by Poner7" = "Maintained by Poner7";
+"Maintainer" = "Maintainer";

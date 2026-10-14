@@ -1,3 +1,6 @@
+// AirBeepSwap — maintained by Poner7.
+// https://github.com/poner7/AirBeepSwap
+
 import SwiftUI
 
 /// Renders normalized waveform peaks as vertical bars, with duration labels.

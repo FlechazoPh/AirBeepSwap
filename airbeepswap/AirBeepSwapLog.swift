@@ -1,10 +1,13 @@
+// AirBeepSwap — maintained by Poner7.
+// https://github.com/poner7/AirBeepSwap
+
 import Foundation
 
 /// Thread-safe runtime log collector.
 ///
 /// The Rust/FFI layer calls the C log callback from arbitrary threads, so
 /// writes are guarded by a lock and the UI drains the buffer on demand.
-final class AirBeepSwapLog {
+nonisolated final class AirBeepSwapLog: @unchecked Sendable {
     static let shared = AirBeepSwapLog()
 
     private let lock = NSLock()
@@ -55,7 +58,7 @@ final class AirBeepSwapLog {
 
 /// Non-capturing C callback so it can be passed to the Airlift FFI as a
 /// function pointer. Rust calls it with a NUL-terminated message string.
-private let alLogBridge: @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<CChar>?) -> Void = { _, msg in
+nonisolated private let alLogBridge: @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<CChar>?) -> Void = { _, msg in
     guard let msg = msg else { return }
     AirBeepSwapLog.shared.append(String(cString: msg))
 }
