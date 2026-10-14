@@ -1,3 +1,6 @@
+// AirBeepSwap — maintained by Poner7.
+// https://github.com/poner7/AirBeepSwap
+
 import Foundation
 
 /// Supported system range follows the airlift AirTraffic sandbox escape:
@@ -5,7 +8,12 @@ import Foundation
 /// supported and the access layer reports the actual error at runtime.
 enum SystemCompatibility {
     static var isSupported: Bool {
-        let version = ProcessInfo.processInfo.operatingSystemVersion
+        isSupported(version: ProcessInfo.processInfo.operatingSystemVersion)
+    }
+
+    /// Check the OS version rather than a list of hardware identifiers, so new
+    /// iPhone models (including iPhone 18 Pro Max on 27.0.1) are allowed.
+    static func isSupported(version: OperatingSystemVersion) -> Bool {
         guard version.majorVersion >= 18 else { return false }
         if version.majorVersion > 27 { return false }
         if version.majorVersion == 27 {

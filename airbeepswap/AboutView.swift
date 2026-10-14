@@ -1,3 +1,6 @@
+// AirBeepSwap — maintained by Poner7.
+// https://github.com/poner7/AirBeepSwap
+
 import SwiftUI
 
 struct AboutView: View {
@@ -19,9 +22,16 @@ struct AboutView: View {
                         Text(versionText)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
+                        Text(String(localized: "Maintained by Poner7"))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
+                }
+
+                Section(String(localized: "Maintainer")) {
+                    Link("Poner7 · GitHub", destination: URL(string: "https://github.com/poner7/AirBeepSwap")!)
                 }
 
                 Section(String(localized: "Introduction")) {
@@ -46,6 +56,7 @@ struct AboutView: View {
                         creditRow(name: "AirliftSilence", detail: "YiHoooong · silent assets & replace protocol (MIT)")
                         creditRow(name: "AirCard", detail: "mak5er · Rust Airlift core")
                         creditRow(name: "placard", detail: "frs0n · iOS container access research")
+                        creditRow(name: "LocalDevVPN / StosVPN", detail: "SideStore Team / jkcoxson · embedded tunnel uses adapted code")
                     }
                     .font(.footnote)
                 }
@@ -83,7 +94,7 @@ struct AboutView: View {
     }
 
     private var versionText: String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.1"
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.1.1"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
         return "Version \(version) (\(build))"
     }

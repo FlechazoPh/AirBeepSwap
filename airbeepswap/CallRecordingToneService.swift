@@ -1,3 +1,6 @@
+// AirBeepSwap — maintained by Poner7.
+// https://github.com/poner7/AirBeepSwap
+
 import Combine
 import Foundation
 import UIKit
@@ -18,7 +21,7 @@ enum CallRecordingToneError: LocalizedError {
         case .unsupported:
             String(localized: "This device or system version is not supported.")
         case .pairingRequired:
-            String(localized: "Pair this iPhone and connect LocalDevVPN before changing recording tones.")
+            String(localized: "Pair this iPhone and connect the built-in tunnel before changing recording tones.")
         case .airliftUnavailable:
             String(localized: "This build is missing AirLift file access support.")
         case .airliftFailed(let reason):
@@ -156,7 +159,8 @@ final class CallRecordingToneService: ObservableObject {
         // Never probe the system disclosure files at app-open: airlift reads are
         // unreliable on some iOS releases and would surface a spurious error.
         // Restore the last known mode from the cache instead.
-        mode = ToneModeCache.load() ?? .systemTone
+        let cachedMode = ToneModeCache.load() ?? .systemTone
+        mode = cachedMode == .checking || cachedMode == .unavailable ? .systemTone : cachedMode
         customMetas = CustomMetaStore.load()
         // Metas are only meaningful while the global mode is custom.
         if mode != .customTone {
@@ -165,6 +169,18 @@ final class CallRecordingToneService: ObservableObject {
         statusDetail = nil
         needsAirliftSetup = false
         lastError = nil
+        // Validate only local prerequisites. A fresh install must expose setup
+        // before the user tries to write, without probing any system tone files.
+        do {
+            _ = try accessBackend()
+            await LocalTunnelController.shared.refreshStatus()
+            needsAirliftSetup = !LocalTunnelController.shared.isConnected
+        } catch {
+            mode = .unavailable
+            statusDetail = error.localizedDescription
+            needsAirliftSetup = shouldOfferAirliftSetup(for: error)
+        }
+        AirBeepSwapLog.shared.append("system: \(ProcessInfo.processInfo.operatingSystemVersionString), device: \(UIDevice.current.model)")
         AirBeepSwapLog.shared.append("refresh: restored cached mode = \(mode)")
     }
 
@@ -181,6 +197,7 @@ final class CallRecordingToneService: ObservableObject {
         await withBusyScreen(String(localized: "Applying silence to call recording tones")) { [self] in
             do {
                 let backend = try accessBackend()
+                try await LocalTunnelController.shared.ensureConnected()
                 let current = try await readTones(using: backend)
                 let silent = try silentTones()
                 if current == silent {
@@ -224,6 +241,7 @@ final class CallRecordingToneService: ObservableObject {
         await withBusyScreen(String(localized: "Restoring original call recording tones")) { [self] in
             do {
                 let backend = try accessBackend()
+                try await LocalTunnelController.shared.ensureConnected()
                 let current = try await readTones(using: backend)
                 // No backup yet means the tones have never been changed, so they are
                 // already the original system tones.
@@ -280,6 +298,7 @@ final class CallRecordingToneService: ObservableObject {
         await withBusyScreen(String(localized: "Applying custom tone")) { [self] in
             do {
                 let backend = try accessBackend()
+                try await LocalTunnelController.shared.ensureConnected()
                 let current = try await readTones(using: backend)
                 if current[kind.fileIndex] == data {
                     self.setCustomState(kind: kind, meta: meta)
@@ -373,6 +392,7 @@ final class CallRecordingToneService: ObservableObject {
     }
 
     private func shouldOfferAirliftSetup(for error: Error) -> Bool {
+        if error is LocalTunnelError { return true }
         guard let error = error as? CallRecordingToneError else { return false }
         switch error {
         case .pairingRequired, .airliftUnavailable, .airliftFailed:

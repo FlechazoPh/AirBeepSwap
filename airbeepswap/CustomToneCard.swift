@@ -1,3 +1,6 @@
+// AirBeepSwap — maintained by Poner7.
+// https://github.com/poner7/AirBeepSwap
+
 import AVFoundation
 import Combine
 import SwiftUI
@@ -119,7 +122,7 @@ struct CustomToneCard: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.orange)
-                    .disabled(service.isBusy)
+                    .disabled(service.isBusy || service.mode == .checking || service.mode == .unavailable)
                 }
             }
 

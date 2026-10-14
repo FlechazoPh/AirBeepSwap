@@ -1,3 +1,6 @@
+// AirBeepSwap — maintained by Poner7.
+// https://github.com/poner7/AirBeepSwap
+
 #import "GrappaHelper.h"
 #import <Foundation/Foundation.h>
 #import <dlfcn.h>

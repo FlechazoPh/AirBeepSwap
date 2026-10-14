@@ -5,9 +5,6 @@
 "Start pairing, then open Settings › Privacy & Security › Developer Mode › Pair with AirBeepSwap." = "开始配对后，前往“设置 › 隐私与安全性 › 开发者模式 › 与 AirBeepSwap 配对”。";
 "Waiting for pairing…" = "等待配对…";
 "Start pairing" = "开始配对";
-"Connect LocalDevVPN" = "连接 LocalDevVPN";
-"Open LocalDevVPN, tap Connect, then return to AirBeepSwap." = "打开 LocalDevVPN，点击“连接”，连接成功后返回 AirBeepSwap。";
-"Open LocalDevVPN" = "打开 LocalDevVPN";
 "Pair again" = "重新配对";
 "Checking connection…" = "检查连接…";
 "Check and enter" = "检查并进入";
@@ -29,7 +26,6 @@
 "Operation Failed" = "操作失败";
 "This device or system version is not supported." = "当前设备或系统版本不受支持。";
 "Missing system tone: %@" = "找不到系统提示音：%@";
-"Pair this iPhone and connect LocalDevVPN before changing recording tones." = "请先配对这台 iPhone 并连接 LocalDevVPN，然后再修改录音提示音。";
 "This build is missing AirLift file access support." = "当前版本缺少 AirLift 文件访问支持。";
 "AirLift operation failed: %@" = "AirLift 操作失败：%@";
 "Could not read %@: %@" = "无法读取 %@：%@";
@@ -38,10 +34,8 @@
 "Could not verify %@ after writing." = "写入后无法校验 %@。";
 "Airlift Setup" = "Airlift 设置";
 "Airlift Setup Required" = "需要完成 Airlift 设置";
-"Pair this iPhone and connect LocalDevVPN to allow AirBeepSwap to access the recording tone files." = "请配对这台 iPhone 并连接 LocalDevVPN，以允许 AirBeepSwap 访问录音提示音文件。";
 "Open Airlift Setup" = "打开 Airlift 设置";
 "Airlift Ready" = "Airlift 已就绪";
-"Pairing and LocalDevVPN are ready. Return to AirBeepSwap to read or change the recording tones." = "配对和 LocalDevVPN 已就绪，请返回 AirBeepSwap 读取或修改录音提示音。";
 "About" = "关于";
 "About AirBeepSwap" = "软件介绍";
 "Introduction" = "软件介绍";
@@ -95,3 +89,22 @@
 "Removing or replacing the disclosure tone means the other party is no longer told the call is being recorded. Many jurisdictions require informing all parties before recording. Use this app only on your own device and only where the law allows. You are solely responsible for complying with applicable laws." = "移除或替换提示音后，对方将不再收到“通话正在被录音”的告知。许多国家和地区法律要求录音前告知所有参与方。请仅在你自己的设备上、且在法律允许的情况下使用本应用，遵守适用法律是你的责任。";
 "Removing or replacing the disclosure tone means the other party is no longer told the call is being recorded. Use only where the law allows." = "移除或替换提示音后，对方将不再收到录音告知，请确保在法律允许的情况下使用。";
 "Logs include pairing, tunnel and AirLift file operations." = "日志包含配对、隧道与 AirLift 文件操作记录。";
+"Pair this iPhone and connect the built-in tunnel before changing recording tones." = "请先配对这台 iPhone 并连接内置隧道，然后再修改录音提示音。";
+"Pair this iPhone and connect the built-in tunnel to allow AirBeepSwap to access the recording tone files." = "请配对这台 iPhone 并连接内置隧道，以允许 AirBeepSwap 访问录音提示音文件。";
+"Pairing and the built-in tunnel are ready. Return to AirBeepSwap to read or change the recording tones." = "配对和内置隧道已就绪，请返回 AirBeepSwap 读取或修改录音提示音。";
+"Connect to Wi-Fi to use pairing and the built-in local tunnel." = "请连接 Wi-Fi，以使用配对和内置本地隧道。";
+"Connect built-in tunnel" = "连接内置隧道";
+"AirBeepSwap includes the local tunnel. Tap Connect and allow iOS to add the VPN configuration." = "AirBeepSwap 已内置本地隧道。点击连接，并允许 iOS 添加 VPN 配置。";
+"Connect tunnel" = "连接隧道";
+"Disconnect tunnel" = "断开隧道";
+"Local tunnel connected" = "本地隧道已连接";
+"Local tunnel disconnected" = "本地隧道未连接";
+"Connecting local tunnel…" = "正在连接本地隧道…";
+"Disconnecting local tunnel…" = "正在断开本地隧道…";
+"A local tunnel operation is already in progress." = "本地隧道操作正在进行中。";
+"The built-in tunnel requires a physical iPhone and Network Extension signing permissions." = "内置隧道需要实体 iPhone，以及允许网络扩展的签名权限。";
+"The built-in tunnel did not connect. Check that both the app and its extension are signed with Network Extension permissions." = "内置隧道未能连接。请检查主 App 和扩展的签名是否都包含网络扩展权限。";
+"Could not configure the built-in tunnel: %@. Both the app and its extension need Network Extension signing permissions." = "无法配置内置隧道：%@。主 App 和扩展的签名都需要包含网络扩展权限。";
+
+"Maintained by Poner7" = "由 Poner7 维护";
+"Maintainer" = "维护者";

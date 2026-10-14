@@ -1,4 +1,6 @@
 #!/bin/bash
+# AirBeepSwap — maintained by Poner7.
+# https://github.com/poner7/AirBeepSwap
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -11,6 +13,13 @@ PATCH_FILE="$ROOT/scripts/airlift-read-file.patch"
 # AirCard's build script otherwise defaults to a beta Xcode app that is not
 # present on the GitHub runner. setup-xcode has already selected the right one.
 export DEVELOPER_DIR="${DEVELOPER_DIR:-$(xcode-select -p)}"
+
+for tool in cargo rustup; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    echo "Missing $tool. Install Rust and add its bin directory to PATH." >&2
+    exit 1
+  fi
+done
 
 rm -rf "$BUILD_ROOT"
 git clone --quiet --filter=blob:none "$AIRCARD_REPO" "$BUILD_ROOT"
@@ -26,10 +35,36 @@ fi
 git -C "$BUILD_ROOT" apply --check --3way "$PATCH_FILE"
 git -C "$BUILD_ROOT" apply --3way "$PATCH_FILE"
 
-"$BUILD_ROOT/build-ios.sh"
+# Build here instead of invoking AirCard's script, which unconditionally
+# sources ~/.cargo/env and can exit before building with an isolated Rust
+# installation. Honor the caller's PATH, CARGO_HOME and RUSTUP_HOME.
+export IPHONEOS_DEPLOYMENT_TARGET="${IPHONEOS_DEPLOYMENT_TARGET:-18.0}"
+export RUSTFLAGS="${RUSTFLAGS:-} --remap-path-prefix=$BUILD_ROOT=/build/aircard"
+export CFLAGS="${CFLAGS:-} -ffile-prefix-map=$BUILD_ROOT=/build/aircard"
+export TARGET_CFLAGS="${TARGET_CFLAGS:-} -ffile-prefix-map=$BUILD_ROOT=/build/aircard"
+rustup target add aarch64-apple-ios aarch64-apple-ios-sim
+(
+  cd "$BUILD_ROOT/rust-core"
+  cargo build --locked --release --target aarch64-apple-ios
+  cargo build --locked --release --target aarch64-apple-ios-sim
+)
+rm -rf "$BUILD_ROOT/AirliftFFI.xcframework"
+xcodebuild -create-xcframework \
+  -library "$BUILD_ROOT/rust-core/target/aarch64-apple-ios/release/libairlift_ffi.a" \
+  -headers "$BUILD_ROOT/rust-core/include" \
+  -library "$BUILD_ROOT/rust-core/target/aarch64-apple-ios-sim/release/libairlift_ffi.a" \
+  -headers "$BUILD_ROOT/rust-core/include" \
+  -output "$BUILD_ROOT/AirliftFFI.xcframework"
 
 rm -rf "$ROOT/Vendor/AirCard/AirliftFFI.xcframework"
 cp -R "$BUILD_ROOT/AirliftFFI.xcframework" "$ROOT/Vendor/AirCard/AirliftFFI.xcframework"
+
+python3 - "$ROOT/Vendor/AirCard/AirliftFFI.xcframework" <<'PY'
+from pathlib import Path
+import sys
+for header in Path(sys.argv[1]).glob('*/Headers/airlift.h'):
+    header.write_text(header.read_text().rstrip() + '\n')
+PY
 
 cd "$ROOT"
 {

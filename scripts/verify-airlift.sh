@@ -1,4 +1,6 @@
 #!/bin/bash
+# AirBeepSwap — maintained by Poner7.
+# https://github.com/poner7/AirBeepSwap
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

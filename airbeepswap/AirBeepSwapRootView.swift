@@ -1,3 +1,6 @@
+// AirBeepSwap — maintained by Poner7.
+// https://github.com/poner7/AirBeepSwap
+
 import Combine
 import SwiftUI
 
@@ -28,6 +31,15 @@ struct AirBeepSwapRootView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("AirBeepSwap")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showingAirliftSetup = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel(String(localized: "Open Airlift Setup"))
+                    .disabled(service.isBusy || !SystemCompatibility.isSupported)
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showingAbout = true
@@ -85,6 +97,9 @@ struct AirBeepSwapRootView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+            Text(String(localized: "Maintained by Poner7"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
     }
@@ -186,7 +201,7 @@ struct AirBeepSwapRootView: View {
             Label(String(localized: "Airlift Setup Required"), systemImage: "link.badge.plus")
                 .font(.headline)
 
-            Text(String(localized: "Pair this iPhone and connect LocalDevVPN to allow AirBeepSwap to access the recording tone files."))
+            Text(String(localized: "Pair this iPhone and connect the built-in tunnel to allow AirBeepSwap to access the recording tone files."))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
